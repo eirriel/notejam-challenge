@@ -1,0 +1,12 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws s3 cp s3://brandears-atenas-config/sipropone-master.zip .
+      - unzip sipropone-master.zip
+  build:
+    commands:
+      - ls -lh
+      - cd sipropone
+      - pip install -e .
+      - ansible-playbook site.yml -u centos --private-key ../brandears-20171117 --diff -l $ANSIBLE_LIMIT -t $ANSIBLE_TAGS

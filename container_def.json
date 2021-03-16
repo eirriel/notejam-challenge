@@ -1,0 +1,23 @@
+[
+  {
+    "name": "notejam",
+    "image": "${ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${REPONAME}:${TAG}",
+    "cpu": 1,
+    "memory": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 5000
+      }
+    ],
+    "environment": [{
+      "name": "ENVIRONMENT",
+      "value": "production"
+    },
+    {
+	    "name": "SQLALCHEMY_DATABASE_URI",
+	    "value": "mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_ADDRESS}:3306/notejam"
+    }
+    ]
+  }
+]
