@@ -150,5 +150,5 @@ module "notejam_ci" {
   ecs_cluster_name       = aws_ecs_cluster.cluster.name
   ecs_service_name       = aws_ecs_service.service.name
   listener_arns          = [aws_lb_listener.notejam_listener.arn]
-  task_definition_family = aws_ecs_task_definition.task-def.family
+  task_definition_family = "arn:aws:ecs:ap-southeast-2:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.task-def.family}"
 }

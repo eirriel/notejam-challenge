@@ -88,6 +88,7 @@ data "aws_iam_policy_document" "ecs_iam_policy" {
     resources = ["*"]
   }
 }
+
 # Create IAM role for ECS access
 resource "aws_iam_role" "ecs_iam_role" {
   name = "iam-role-ecs"
@@ -156,3 +157,7 @@ data "template_file" "container-file-def" {
   }
 }
 
+# Creating log group
+resource "aws_cloudwatch_log_group" "notejam_logs" {
+  name = "notejam-logs"
+}
