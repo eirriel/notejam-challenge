@@ -40,7 +40,8 @@ resource "aws_db_instance" "db" {
 
 # Storing the credentials in Secret Manager
 resource "aws_secretsmanager_secret" "db_endpoint" {
-  name = "db_endpoint"
+  name = "db_credentials"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "db_endpoint_value" {

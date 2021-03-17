@@ -10,11 +10,13 @@
         "containerPort": 5000
       }
     ],
-    "log-driver": "awslogs",
-    "log-opts": {
-      "awslogs_region": "${AWS_DEFAULT_REGION}",
-      "awslogs-group": "notejam-logs",
-      "awslogs-create-group": true
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "log-opts": {
+        "awslogs_region": "${AWS_DEFAULT_REGION}",
+        "awslogs-group": "notejam-logs",
+        "awslogs-create-group": true
+      }
     }
   }
 ]

@@ -24,12 +24,19 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
   role = aws_iam_role.ecs_agent_role.name
 }
 
+# Importing key pair
+resource "aws_key_pair" "ae" {
+  key_name   = "ae"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqBLaEjYbHNuLPcUCYSDC+rHZuQPXyXWD+hZu55jjx2zVxfrT9hNUYoNS6GvZPJD7qzWVNlXN3WtO5IxCEpG4WHFGzZuiD8wru7WeioSra7xovljvC2WLU8bG27fterR+/HHSOmwyfpflfimnysqC87FK02EBye/V7GD0xMQAPXl1SSRuAyXq91hKP7dHaIMPsuHp+elSppN8viaisWc5sOyj7dQLiWghcsvH/Vw5uplMlJNmXx6OfArbVSn7AyyZYqIWi3e5iR47kR3x67/0nZcXaZEq+jiHWpQ/n1k9AI+RSVaqV3Be4Gzy5FjF25i02AqQs/2ZvvXL/xh4kOT81"
+}
+
 # Create Launch configuration
 resource "aws_launch_configuration" "ecs_launch_config" {
   image_id             = "ami-016f6cf165ef55d02" # AWS ECS Optimized AMI for ap-southeast-2
   iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
   security_groups      = [aws_security_group.instance_sec_group.id]
   instance_type        = "t3.small"
+  key_name             = aws_key_pair.ae.id
   user_data            = "#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.cluster.name} >> /etc/ecs/ecs.config"
 }
 
@@ -114,11 +121,11 @@ resource "aws_ecs_cluster" "cluster" {
 
 # Create ECS Service
 resource "aws_ecs_service" "service" {
-  name    = "ecs-service"
-  cluster = aws_ecs_cluster.cluster.id
+  name            = "ecs-service"
+  cluster         = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.task-def.arn
-  desired_count = 2
-  iam_role      = aws_iam_role.ecs_iam_role.arn
+  desired_count   = 2
+  iam_role        = aws_iam_role.ecs_iam_role.arn
 
   load_balancer {
     target_group_arn = aws_lb_target_group.lb_tg_bluegreen1.arn

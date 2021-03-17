@@ -66,6 +66,13 @@ resource "aws_security_group" "instance_sec_group" {
     security_groups = [aws_security_group.lb-sec-group.id]
   }
 
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "tcp"
+    cidr_blocks = ["158.140.229.101/32"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -101,7 +108,14 @@ resource "aws_lb_target_group" "lb_tg_bluegreen1" {
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
   target_type = "instance"
-  depends_on  = [aws_lb.alb]
+
+  health_check {
+    path                = "/"
+    interval            = 10
+    unhealthy_threshold = 5
+  }
+
+  depends_on = [aws_lb.alb]
 
 }
 
@@ -112,7 +126,14 @@ resource "aws_lb_target_group" "lb_tg_bluegreen2" {
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
   target_type = "instance"
-  depends_on  = [aws_lb.alb]
+
+  health_check {
+    path                = "/"
+    interval            = 10
+    unhealthy_threshold = 5
+  }
+
+  depends_on = [aws_lb.alb]
 
 }
 
