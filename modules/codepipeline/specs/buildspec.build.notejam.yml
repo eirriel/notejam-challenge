@@ -12,6 +12,7 @@ phases:
       # - docker login -u eirriel -p $BUILD_TOKEN
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - which envsubst
   build:
     commands:
       - echo Build started on `date`
@@ -27,13 +28,17 @@ phases:
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG
       - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG  > imageDetail.json
-      - cp -vf notejam/container_def_template.json container_def.json
-      - sed -i 's/<TASK_DEFINITION>/'$TASK_DEFINITION'/g' appspec.yml
-      - sed -i 's/<APP_NAME>/'$REPONAME'/g' appspec.yml container_def.json
-      - sed -i 's/<SERVICE_PORT>/'$SERVICE_PORT'/g' appspec.yml container_def.json
-      - sed -i 's/<AWS_ACCOUNT_ID>/'$AWS_ACCOUNT_ID'/g' container_def.json
-      - sed -i 's/<IMAGE_NAME>/'$AWS_ACCOUNT_ID'\.dkr\.ecr\.'$AWS_DEFAULT_REGION'\.amazonaws.com\/'$REPONAME'\:'$TAG'/g' container_def.json
+      - envsubst < notejam/container_def_template.json > container_def.json
+      - envsubst < notejam/appspec_template.yml > appspec.yml
+      # - sed -i 's/<TASK_DEFINITION>/'$TASK_DEFINITION'/g' appspec.yml
+      # - sed -i 's/<APP_NAME>/'$REPONAME'/g' appspec.yml container_def.json
+      # - sed -i 's/<SERVICE_PORT>/'$SERVICE_PORT'/g' appspec.yml container_def.json
+      # - sed -i 's/<AWS_ACCOUNT_ID>/'$AWS_ACCOUNT_ID'/g' container_def.json
+      # - sed -i 's/<IMAGE_NAME>/'$AWS_ACCOUNT_ID'\.dkr\.ecr\.'$AWS_DEFAULT_REGION'\.amazonaws.com\/'$REPONAME'\:'$TAG'/g' container_def.json
+      - echo container_def
       - cat container_def.json
+      - echo appspec
+      - cat appspec.yml
       - aws s3 cp container_def.json s3://notejam-codepipeline-artifacts/debug/
 artifacts:
   files: 

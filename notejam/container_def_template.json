@@ -1,13 +1,13 @@
 [
   {
-    "name": "<APP_NAME>",
-    "image": "<IMAGE_NAME>",
+    "name": "${REPONAME}",
+    "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${REPONAME}:${TAG}",
     "cpu": 1,
     "memory": 512,
     "essential": true,
     "portMappings": [
       {
-        "containerPort": <SERVICE_PORT>
+        "containerPort": ${SERVICE_PORT}
       }
     ],
     "logConfiguration": {
