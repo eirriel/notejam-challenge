@@ -34,10 +34,17 @@ resource "aws_db_instance" "db" {
   password               = random_password.db_password.result
   multi_az               = true
   db_subnet_group_name   = module.vpc.database_subnet_group
-  skip_final_snapshot  = true
+  skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.db_sec_group.id]
 }
 
+# Storing the credentials in Secret Manager
+resource "aws_secretsmanager_secret" "db_endpoint" {
+  name = "db_endpoint"
+}
 
-
+resource "aws_secretsmanager_secret_version" "db_endpoint_value" {
+  secret_id     = aws_secretsmanager_secret.db_endpoint.id
+  secret_string = "mysql://${aws_db_instance.db.username}:${random_password.db_password.result}@${aws_db_instance.db.address}:3306/notejam"
+}
 

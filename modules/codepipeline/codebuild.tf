@@ -49,7 +49,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_policy_attachment" {
 data "template_file" "buildspec_notejam" {
   template = file("${path.module}/specs/buildspec.build.notejam.yml")
   vars = {
-    AWS_DEFAULT_REGION = "us-east-1"
+    AWS_DEFAULT_REGION = "ap-southeast-2"
     AWS_ACCOUNT_ID     = data.aws_caller_identity.current.account_id
   }
 }
@@ -78,10 +78,35 @@ resource "aws_codebuild_project" "notejam_build" {
     type                        = "LINUX_CONTAINER"
 
     environment_variable {
-      name  = "BUILD_TOKEN"
-      value = "docker/credentials"
-      type = "SECRETS_MANAGER"
+      name  = "IMAGE_REPO_NAME"
+      value = "notejam"
     }
+
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID"
+      value = var.account_id
+    }
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.region
+    }
+
+    environment_variable {
+      name  = "IMAGE_TAG"
+      value = "latest"
+    }
+
+    environment_variable {
+      name  = "TASK_DEFINITION"
+      value = var.task_definition_family
+    }
+
+    # environment_variable {
+    #   name  = "DB_ENDPOINT"
+    #   value = "docker/credentials"
+    #   type = "SECRETS_MANAGER"
+    # }
   }
 
   logs_config {

@@ -74,6 +74,12 @@ data "aws_iam_policy_document" "codepipeline_policy_doc" {
       "logs:*",
       "codebuild:BatchGetBuilds",
       "codebuild:StartBuild",
+      "codedeploy:CreateDeployment",
+      "codedeploy:GetApplication",
+      "codedeploy:GetApplicationRevision",
+      "codedeploy:GetDeployment",
+      "codedeploy:GetDeploymentConfig",
+      "codedeploy:RegisterApplicationRevision",
       "codestar-connections:UseConnection",
       "codestar-connections:GetConnection",
       "codestar-connections:ListConnections"
@@ -161,7 +167,7 @@ resource "aws_codepipeline" "notejam_pipeline" {
         "SourceArtifact",
       ]
       name             = "Buildnotejam"
-      output_artifacts = []
+      output_artifacts = ["BuildArtifact"]
       owner            = "AWS"
       provider         = "CodeBuild"
       run_order        = 1
@@ -169,23 +175,25 @@ resource "aws_codepipeline" "notejam_pipeline" {
     }
   }
 
-  # stage {
-  #   name = "Deploy"
+  stage {
+    name = "Deploy"
 
-  #   action {
-  #     category = "Deploy"
-  #     configuration = {
-  #       "ProjectName" = "notejam-ecs-deploy"
-  #     }
-  #     input_artifacts = [
-  #       "SourceArtifact",
-  #     ]
-  #     name             = "Deploy"
-  #     output_artifacts = []
-  #     owner            = "AWS"
-  #     provider         = "CodeDeployToECS"
-  #     run_order        = 1
-  #     version          = "1"
-  #   }
-  # }
+    action {
+      name            = "DeployToECS"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "CodeDeployToECS"
+      input_artifacts = ["BuildArtifact"]
+      version         = "1"
+
+      configuration = {
+        ApplicationName                = "notejam"
+        DeploymentGroupName            = "notejam"
+        TaskDefinitionTemplateArtifact = "BuildArtifact"
+        TaskDefinitionTemplatePath     = "taskdef.json"
+        AppSpecTemplateArtifact        = "BuildArtifact"
+        AppSpecTemplatePath            = "appspec.yml"
+      }
+    }
+  }
 }

@@ -26,22 +26,22 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 
 # Create Launch configuration
 resource "aws_launch_configuration" "ecs_launch_config" {
-    image_id             = "ami-016f6cf165ef55d02" # AWS ECS Optimized AMI for ap-southeast-2
-    iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
-    security_groups      = [aws_security_group.instance_sec_group.id]
-    instance_type        = "t3.small"
-    user_data            = "#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.cluster.name} >> /etc/ecs/ecs.config"
+  image_id             = "ami-016f6cf165ef55d02" # AWS ECS Optimized AMI for ap-southeast-2
+  iam_instance_profile = aws_iam_instance_profile.ecs_instance_profile.name
+  security_groups      = [aws_security_group.instance_sec_group.id]
+  instance_type        = "t3.small"
+  user_data            = "#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.cluster.name} >> /etc/ecs/ecs.config"
 }
 
 # Create autoscaling group
 resource "aws_autoscaling_group" "auto-scaling" {
-  desired_capacity = 1
-  max_size = 2
-  min_size = 1
+  desired_capacity     = 1
+  max_size             = 2
+  min_size             = 1
   launch_configuration = aws_launch_configuration.ecs_launch_config.name
   vpc_zone_identifier = [
     module.vpc.public_subnets[0],
-    module.vpc.public_subnets[1]]
+  module.vpc.public_subnets[1]]
 }
 
 # Create ECS Capacity provider
@@ -65,14 +65,19 @@ resource "aws_ecs_capacity_provider" "ecs-cap" {
 data "aws_iam_policy_document" "ecs_iam_policy" {
   statement {
     effect = "Allow"
-    actions = ["elasticloadbalancing:RegisterTargets",
+    actions = [
+      "elasticloadbalancing:RegisterTargets",
       "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
       "elasticloadbalancing:Describe*",
       "elasticloadbalancing:DeregisterTargets",
       "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
       "ec2:Describe*",
       "ec2:AuthorizeSecurityGroupIngress",
-      "ec2: *"]
+      "ec2: *",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
     resources = ["*"]
   }
 }
@@ -83,12 +88,12 @@ resource "aws_iam_role" "ecs_iam_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid: "",
-        Effect: "Allow",
+        Sid : "",
+        Effect : "Allow",
         Principal = {
           Service = "ecs.amazonaws.com"
         },
-        Action: [
+        Action : [
           "sts:AssumeRole"
         ],
       }
@@ -98,8 +103,8 @@ resource "aws_iam_role" "ecs_iam_role" {
 # Create IAM policy for ECS access with data as source
 resource "aws_iam_role_policy" "ecs_iam_role_policy" {
   policy = data.aws_iam_policy_document.ecs_iam_policy.json
-  name = "ecs-assume-role"
-  role = aws_iam_role.ecs_iam_role.id
+  name   = "ecs-assume-role"
+  role   = aws_iam_role.ecs_iam_role.id
 }
 
 # Create ECS cluster
@@ -109,12 +114,12 @@ resource "aws_ecs_cluster" "cluster" {
 
 # Create ECS Service
 resource "aws_ecs_service" "service" {
-  name            = "ecs-service"
-  cluster         = aws_ecs_cluster.cluster.id
+  name    = "ecs-service"
+  cluster = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.task-def.arn
-  desired_count   = 2
-  iam_role        = aws_iam_role.ecs_iam_role.arn
-  
+  desired_count = 2
+  iam_role      = aws_iam_role.ecs_iam_role.arn
+
   load_balancer {
     target_group_arn = aws_lb_target_group.lb_tg_bluegreen1.arn
     container_name   = "notejam"
@@ -130,18 +135,17 @@ resource "aws_ecs_service" "service" {
 
 #Create task definition
 resource "aws_ecs_task_definition" "task-def" {
-  family = "service"
+  family                = "service"
   container_definitions = data.template_file.container-file-def.rendered
 }
+
 data "template_file" "container-file-def" {
   template = file("${path.root}/container_def.json")
   vars = {
-    ACCOUNT_ID = data.aws_caller_identity.current.account_id
+    ACCOUNT_ID         = data.aws_caller_identity.current.account_id
     AWS_DEFAULT_REGION = "ap-southeast-2"
-    DATABASE_USER = "notejam"
-    DATABASE_PASSWORD = random_password.db_password.result
-    DATABASE_ADDRESS = aws_db_instance.db.address
-    REPONAME = "notejam"
-    TAG = var.app_tag
+    REPOSITORY_URI     = module.notejam_ci.ecr_repo
+    TAG                = var.app_tag
   }
 }
+

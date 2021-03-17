@@ -1,13 +1,13 @@
 [
   {
-    "name": "notejam",
-    "image": "${REPOSITORY_URI}:${TAG}",
+    "name": "<APP_NAME>",
+    "image": "<IMAGE_NAME>",
     "cpu": 1,
     "memory": 512,
     "essential": true,
     "portMappings": [
       {
-        "containerPort": 5000
+        "containerPort": <SERVICE_PORT>
       }
     ],
     "log-driver": "awslogs",

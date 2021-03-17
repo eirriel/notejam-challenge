@@ -19,15 +19,15 @@ variable "db_subnets" {
 }
 
 variable "app_tag" {
-    type = string
-    default = "latest"
+  type    = string
+  default = "latest"
 }
 variable "github_repo_name" {
-    type = string
-    default = "eirriel/notejam"
+  type    = string
+  default = "eirriel/notejam"
 }
 
 variable "github_repo_branch" {
-    type = string
-    default = "terraform"
+  type    = string
+  default = "terraform"
 }

@@ -15,11 +15,26 @@ phases:
   build:
     commands:
       - echo Build started on `date`
+      - echo Pulling secrets
+      - echo "ENVIRONMENT=production" > notejam/.env
+      - aws secretsmanager get-secret-value --secret-id db_endpoint --query SecretString --output text >> notejam/.env
       - echo Building the Docker image...          
-      - cd notejam && docker build -t $REPONAME:$TAG .
+      - cd notejam && docker build -t $REPONAME:$TAG . && cd ..
       - docker tag $REPONAME:$TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG 
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG
+      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG  > imageDetail.json
+      - cp -vf notejam/container_def_template.json container_def.json
+      - sed -i 's/<TASK_DEFINITION>/'$TASK_DEFINITION'/g' appspec.yml
+      - sed -i 's/<APP_NAME>/'$REPONAME'/g' appspec.yml container_def.json
+      - sed -i 's/<SERVICE_PORT>/'$SERVICE_PORT'/g' appspec.yml container_def.json
+      - sed -i 's/<AWS_ACCOUNT_ID>/'$AWS_ACCOUNT_ID'/g' container_def.json
+      - sed -i 's/<IMAGE_NAME>/'$AWS_ACCOUNT_ID'\.dkr\.ecr\.'$AWS_DEFAULT_REGION'\.amazonaws.com\/'$REPONAME'\:'$TAG'/g' container_def.json
+artifacts:
+  files: 
+    - imageDetail.json
+    - appspec.yml
+    - container_def.json
