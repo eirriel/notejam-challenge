@@ -12,10 +12,10 @@
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
-      "log-opts": {
+      "options": {
         "awslogs-region": "ap-southeast-2",
         "awslogs-group": "notejam-logs",
-        "awslogs-create-group": true
+        "awslogs-create-group": "true"
       }
     }
   }
