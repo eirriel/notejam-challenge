@@ -17,7 +17,7 @@ phases:
       - echo Build started on `date`
       - echo Pulling secrets
       - echo "ENVIRONMENT=production" > notejam/.env
-      - aws secretsmanager get-secret-value --secret-id db_endpoint --query SecretString --output text >> notejam/.env
+      - echo "SQLALCHEMY_DATABASE_URI=$(aws secretsmanager get-secret-value --secret-id db_endpoint --query SecretString --output text)" >> notejam/.env
       - echo Building the Docker image...          
       - cd notejam && docker build -t $REPONAME:$TAG . && cd ..
       - docker tag $REPONAME:$TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG 
@@ -33,7 +33,7 @@ phases:
       - sed -i 's/<SERVICE_PORT>/'$SERVICE_PORT'/g' appspec.yml container_def.json
       - sed -i 's/<AWS_ACCOUNT_ID>/'$AWS_ACCOUNT_ID'/g' container_def.json
       - sed -i 's/<IMAGE_NAME>/'$AWS_ACCOUNT_ID'\.dkr\.ecr\.'$AWS_DEFAULT_REGION'\.amazonaws.com\/'$REPONAME'\:'$TAG'/g' container_def.json
-      - cat container_def.json
+      - aws s3 cp container_def.json s3://notejam-codepipeline-artifacts/debug/
 artifacts:
   files: 
     - imageDetail.json
