@@ -98,6 +98,11 @@ resource "aws_codebuild_project" "notejam_build" {
     }
 
     environment_variable {
+      name  = "SERVICE_PORT"
+      value = "5000"
+    }
+
+    environment_variable {
       name  = "TASK_DEFINITION"
       value = var.task_definition_family
     }
