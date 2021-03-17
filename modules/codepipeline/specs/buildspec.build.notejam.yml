@@ -33,6 +33,7 @@ phases:
       - sed -i 's/<SERVICE_PORT>/'$SERVICE_PORT'/g' appspec.yml container_def.json
       - sed -i 's/<AWS_ACCOUNT_ID>/'$AWS_ACCOUNT_ID'/g' container_def.json
       - sed -i 's/<IMAGE_NAME>/'$AWS_ACCOUNT_ID'\.dkr\.ecr\.'$AWS_DEFAULT_REGION'\.amazonaws.com\/'$REPONAME'\:'$TAG'/g' container_def.json
+      - cat container_def.json
       - aws s3 cp container_def.json s3://notejam-codepipeline-artifacts/debug/
 artifacts:
   files: 

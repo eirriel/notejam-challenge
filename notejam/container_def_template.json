@@ -12,7 +12,7 @@
     ],
     "log-driver": "awslogs",
     "log-opts": {
-      "awslogs_region": "${AWS_DEFAULT_REGION}",
+      "awslogs_region": "ap-southeast-2",
       "awslogs-group": "notejam-logs",
       "awslogs-create-group": true
     }
