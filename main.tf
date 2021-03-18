@@ -186,6 +186,11 @@ resource "aws_lb_target_group" "lb_tg_bluegreen1" {
     matcher = "200,302"
   }
 
+  stickiness {
+    type = "lb_cookie"
+    enabled = true
+  }
+
   depends_on = [aws_lb.alb]
 
 }
@@ -205,6 +210,11 @@ resource "aws_lb_target_group" "lb_tg_bluegreen2" {
     matcher = "200,302"
   }
 
+  stickiness {
+    type = "lb_cookie"
+    enabled = true
+  }
+  
   depends_on = [aws_lb.alb]
 
 }
