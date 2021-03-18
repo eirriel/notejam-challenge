@@ -112,10 +112,10 @@ resource "aws_codebuild_project" "notejam_build" {
       name = "SECURITY_GROUP"
       value = aws_security_group.ci_sec_group.id
     }
-    
+
     environment_variable {
       name  = "SUBNETS"
-      value = var.vpc_subnets
+      value = jsonencode(var.vpc_subnets)
     }
     # environment_variable {
     #   name  = "DB_ENDPOINT"
