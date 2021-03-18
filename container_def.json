@@ -1,0 +1,21 @@
+[
+  {
+    "name": "notejam",
+    "image": "${REPOSITORY_URI}:${TAG}",
+    "cpu": 1,
+    "memory": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 5000
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${AWS_DEFAULT_REGION}",
+        "awslogs-group": "notejam-logs"
+      }
+    }
+  }
+]

@@ -1,0 +1,36 @@
+version: 0.2
+env:
+  variables:
+    AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+    AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}
+    REPONAME: "notejam"
+    TAG: "latest"
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - which jq
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Pulling secrets
+      - echo "ENVIRONMENT=production" > notejam/.env
+      - echo "DEBUG=true" >> notejam/.env
+      - echo "SQLALCHEMY_DATABASE_URI=$(aws secretsmanager get-secret-value --secret-id db_credentials --query SecretString --output text)" >> notejam/.env
+      - echo Building the Docker image...          
+      - cd notejam && docker build -t $REPONAME:$TAG . && cd ..
+      - docker tag $REPONAME:$TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG 
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG
+      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG  > imageDetail.json
+      - aws ecs describe-task-definition --task-definition service | jq '.taskDefinition | .taskDefinitionArn = "<TASK_DEFINITION>"' > taskdef.json
+      - envsubst < notejam/appspec_template.yml > appspec.yml
+artifacts:
+  files: 
+    - imageDetail.json
+    - appspec.yml
+    - taskdef.json
