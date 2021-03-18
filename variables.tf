@@ -29,5 +29,5 @@ variable "github_repo_name" {
 
 variable "github_repo_branch" {
   type    = string
-  default = "terraform"
+  default = "main"
 }
