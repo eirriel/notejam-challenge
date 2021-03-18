@@ -42,8 +42,8 @@ resource "aws_launch_configuration" "ecs_launch_config" {
 
 # Create autoscaling group
 resource "aws_autoscaling_group" "auto-scaling" {
-  desired_capacity     = 1
-  max_size             = 2
+  desired_capacity     = 2
+  max_size             = 6
   min_size             = 1
   launch_configuration = aws_launch_configuration.ecs_launch_config.name
   vpc_zone_identifier = [

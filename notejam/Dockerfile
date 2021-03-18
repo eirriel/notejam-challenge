@@ -7,4 +7,4 @@ RUN apt update && apt install python-mysqldb && \
     pip install MySQL-python
 
 EXPOSE 5000
-CMD ["python","runserver.py"]
+CMD ["run.sh"]

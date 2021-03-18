@@ -8,8 +8,6 @@ env:
 phases:
   pre_build:
     commands:
-      # - echo Logging in to DockerHub...
-      # - docker login -u eirriel -p $BUILD_TOKEN
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
       - which jq
@@ -29,14 +27,8 @@ phases:
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG
       - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG  > imageDetail.json
-      # - envsubst < notejam/container_def_template.json > container_def.json
       - aws ecs describe-task-definition --task-definition service | jq '.taskDefinition | .taskDefinitionArn = "<TASK_DEFINITION>"' > taskdef.json
       - envsubst < notejam/appspec_template.yml > appspec.yml
-      - echo container_def
-      - cat taskdef.json
-      - echo appspec
-      - cat appspec.yml
-      - aws s3 cp container_def.json s3://notejam-codepipeline-artifacts/debug/
 artifacts:
   files: 
     - imageDetail.json
