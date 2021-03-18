@@ -20,6 +20,76 @@ locals {
 # Get information from the account
 data "aws_caller_identity" "current" {}
 
+resource "aws_s3_bucket" "notejam_ct_logs" {
+  bucket = "notejam-ct-logs"
+}
+
+resource "aws_s3_bucket_policy" "ct_bucket_policy" {
+  bucket = aws_s3_bucket.notejam_ct_logs.id
+
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AWSCloudTrailAclCheck20150319",
+            "Effect": "Allow",
+            "Principal": {"Service": "cloudtrail.amazonaws.com"},
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::notejam-ct-logs"
+        },
+        {
+            "Sid": "AWSCloudTrailWrite20150319",
+            "Effect": "Allow",
+            "Principal": {"Service": "cloudtrail.amazonaws.com"},
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::notejam-ct-logs/*",
+            "Condition": {"StringEquals": {"s3:x-amz-acl": "bucket-owner-full-control"}}
+        }
+    ]
+})
+}
+
+# Create IAM role for ECS access
+resource "aws_iam_role" "cloudtrail_iam_role" {
+  name = "iam-role-cloudtrail"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid : "",
+        Effect : "Allow",
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        },
+        Action : [
+          "sts:AssumeRole"
+        ],
+      }
+    ]
+  })
+  managed_policy_arns = ["arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"]
+}
+
+# # Create IAM policy for ECS access with data as source
+# resource "aws_iam_role_policy" "ct_iam_role_policy_attach" {
+#   policy = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+#   name   = "cloudtrail-role"
+#   role   = aws_iam_role.cloudtrail_iam_role.id
+# }
+
+resource "aws_cloudwatch_log_group" "ct_logs" {
+  name = "cloudtrail-logs"
+}
+
+resource "aws_cloudtrail" "main" {
+  name           = "trail-main"
+  s3_bucket_name = aws_s3_bucket.notejam_ct_logs.id
+  include_global_service_events = true
+  cloud_watch_logs_role_arn = aws_iam_role.cloudtrail_iam_role.arn
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.ct_logs.arn}:*"
+}
+
+
 # Create a VPC
 module "vpc" {
   source             = "terraform-aws-modules/vpc/aws"
@@ -113,6 +183,7 @@ resource "aws_lb_target_group" "lb_tg_bluegreen1" {
     path                = "/"
     interval            = 10
     unhealthy_threshold = 5
+    matcher = "200,302"
   }
 
   depends_on = [aws_lb.alb]
@@ -131,6 +202,7 @@ resource "aws_lb_target_group" "lb_tg_bluegreen2" {
     path                = "/"
     interval            = 10
     unhealthy_threshold = 5
+    matcher = "200,302"
   }
 
   depends_on = [aws_lb.alb]
@@ -150,5 +222,5 @@ module "notejam_ci" {
   ecs_cluster_name       = aws_ecs_cluster.cluster.name
   ecs_service_name       = aws_ecs_service.service.name
   listener_arns          = [aws_lb_listener.notejam_listener.arn]
-  task_definition_family = "arn:aws:ecs:ap-southeast-2:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.task-def.family}"
+  task_definition_family = aws_ecs_task_definition.task-def.arn
 }

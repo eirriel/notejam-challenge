@@ -26,6 +26,7 @@ data "aws_iam_policy_document" "codebuild_policy_doc" {
   statement {
     actions = [
       "ecr:*",
+      "ecs:DescribeTaskDefinition",
       "logs:*",
       "s3:*",
       "ec2:*",
@@ -107,6 +108,15 @@ resource "aws_codebuild_project" "notejam_build" {
       value = var.task_definition_family
     }
 
+    environment_variable {
+      name = "SECURITY_GROUP"
+      value = aws_security_group.ci_sec_group.id
+    }
+    
+    environment_variable {
+      name  = "SUBNETS"
+      value = var.vpc_subnets
+    }
     # environment_variable {
     #   name  = "DB_ENDPOINT"
     #   value = "docker/credentials"

@@ -12,12 +12,13 @@ phases:
       # - docker login -u eirriel -p $BUILD_TOKEN
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - which envsubst
+      - which jq
   build:
     commands:
       - echo Build started on `date`
       - echo Pulling secrets
       - echo "ENVIRONMENT=production" > notejam/.env
+      - echo "DEBUG=true" >> notejam/.env
       - echo "SQLALCHEMY_DATABASE_URI=$(aws secretsmanager get-secret-value --secret-id db_credentials --query SecretString --output text)" >> notejam/.env
       - echo Building the Docker image...          
       - cd notejam && docker build -t $REPONAME:$TAG . && cd ..
@@ -28,7 +29,8 @@ phases:
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG
       - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPONAME:$TAG  > imageDetail.json
-      - envsubst < notejam/container_def_template.json > container_def.json
+      # - envsubst < notejam/container_def_template.json > container_def.json
+      - aws ecs describe-task-definition --task-definition service | jq '.taskDefinition' > container_def.json
       - envsubst < notejam/appspec_template.yml > appspec.yml
       # - sed -i 's/<TASK_DEFINITION>/'$TASK_DEFINITION'/g' appspec.yml
       # - sed -i 's/<APP_NAME>/'$REPONAME'/g' appspec.yml container_def.json
