@@ -74,15 +74,17 @@ data "aws_iam_policy_document" "codepipeline_policy_doc" {
       "logs:*",
       "codebuild:BatchGetBuilds",
       "codebuild:StartBuild",
-      "codedeploy:CreateDeployment",
-      "codedeploy:GetApplication",
-      "codedeploy:GetApplicationRevision",
-      "codedeploy:GetDeployment",
-      "codedeploy:GetDeploymentConfig",
-      "codedeploy:RegisterApplicationRevision",
+      "codedeploy:*",
+      # "codedeploy:CreateDeployment",
+      # "codedeploy:GetApplication",
+      # "codedeploy:GetApplicationRevision",
+      # "codedeploy:GetDeployment",
+      # "codedeploy:GetDeploymentConfig",
+      # "codedeploy:RegisterApplicationRevision",
       "codestar-connections:UseConnection",
       "codestar-connections:GetConnection",
-      "codestar-connections:ListConnections"
+      "codestar-connections:ListConnections",
+      "ecs:*"
     ]
     resources = ["*"]
   }

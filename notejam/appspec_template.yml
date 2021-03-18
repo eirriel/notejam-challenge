@@ -7,9 +7,3 @@ Resources:
         LoadBalancerInfo:
           ContainerName: "${REPONAME}"
           ContainerPort: ${SERVICE_PORT}
-        PlatformVersion: "LATEST"
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            Subnets: ${SUBNETS}
-            SecurityGroups: ["${SECURITY_GROUP}"]
-            AssignPublicIp: "ENABLED"
